@@ -1,36 +1,72 @@
 import React, { useState } from "react";
 import styles from "./Organiser.module.scss";
-import allData from "./football-team.data.json";
+import players from "./football-team.data.json";
 
-// ## Football Team Organiser
-// Using the data set provided, build a component to allow users to select players from the list -
-// - and create their ideal Borussia Mönchengladbach starting eleven.
-
-// * A user can’t insert a player more than once.
-// * A team can have no more than 1 Goalkeeper
-// * The starting eleven needs to include 3 Defenders, 4 Midfielders, 3 Attackers.
+import TeamBuilder from "../TeamBuilder";
+import TeamViewer from "../TeamViewer";
 
 const Organiser = () => {
-  const [player, setPlayer] = useState([]);
-  const [team, setTeam] = useState([]);
+  const [playerSelection, updatePlayers] = useState(players);
+  const [currentTeam, updateTeam] = useState([]);
+
+  const addToTeam = (playerId) => {
+    const player = playerSelection.filter((element) => element.id === playerId);
+    const playerRemoved = playerSelection.filter((element) => element.id !== playerId);
+    const curTeamState = [...currentTeam, ...player];
+    updatePlayers(playerRemoved);
+    updateTeam(curTeamState);
+  };
+
+  const removeFromTeam = (playerId) => {
+    const player = players.filter((element) => element.id === playerId);
+    const playerRemoved = currentTeam.filter((element) => element.id !== playerId);
+    const curTeamState = [...playerSelection, ...player];
+    updatePlayers(curTeamState);
+    updateTeam(playerRemoved);
+
+  }
+
+  const filterPlayers = (position) =>
+    playerSelection.filter((element) => element.position === position);
+
+  const filterTeam = (position) => currentTeam.filter((element) => element.position === position);
+
+  const checkPostions = (position, limit) =>
+    currentTeam.filter((element) => element.position === position).length < limit;
+
+  const buildGoalKeepers = checkPostions("Goalkeeper", 1) ? filterPlayers("Goalkeeper") : null;
+  const buildAttackers = checkPostions("Attacker", 3) ? filterPlayers("Attacker") : null;
+  const buildMidfielders = checkPostions("Midfielder", 4) ? filterPlayers("Midfielder") : null;
+  const buildDefenders = checkPostions("Defender", 3) ? filterPlayers("Defender") : null;
+
+  const viewGoalKeepers = filterTeam("Goalkeeper");
+  const viewAttackers = filterTeam("Attacker");
+  const viewMidfielders = filterTeam("Midfielder");
+  const viewDefenders = filterTeam("Defender");
 
   return (
     <>
-      {allData.map((data) => (
-        <div key={data.id} className={styles.border}>
-          <h3>{data.name}</h3>
-          <p>{data.nationality}</p>
-          <p>{data.position}</p>
-          <button onClick={() => {
-            setPlayer(data.name)
-          }}>Add Player</button>
+      <section className={styles.footBallContainer}>
+        <div>
+          <TeamViewer
+            goalKeepers={viewGoalKeepers}
+            attacker={viewAttackers}
+            midfielder={viewMidfielders}
+            defender={viewDefenders}
+            clicked={removeFromTeam}
+          />
         </div>
-      ))}
-      <div className={styles.borderTwo}>
-        <h3>{player}</h3>
-        <p>text</p>
-        <p>text</p>
-      </div>
+
+        <div>
+          <TeamBuilder
+            goalKeepers={buildGoalKeepers}
+            attacker={buildAttackers}
+            midfielder={buildMidfielders}
+            defender={buildDefenders}
+            clicked={addToTeam}
+          />
+        </div>
+      </section>
     </>
   );
 };
